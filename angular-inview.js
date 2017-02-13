@@ -47,7 +47,23 @@ function inViewDirective ($parse) {
       //     be included in `$inviewInfo` (default false).
       //   - `throttle`: Specify a number of milliseconds by which to limit the
       //     number of incoming events.
-      var options = {};
+      var options = {},
+          viewportEvents = [
+            'checkInView',            // fires callbacks only for 'changed' entities
+            'checkInViewUpdateAll',   // force all callbacks to fire
+            'click',
+            'ready',
+            'wheel',
+            'mousewheel',
+            'DomMouseScroll',
+            'MozMousePixelScroll',
+            'resize',
+            'scroll',
+            'touchmove',
+            'mouseup',
+            'keydown'
+          ];
+
       if (attrs.inViewOptions) {
         options = scope.$eval(attrs.inViewOptions);
       }
@@ -62,7 +78,7 @@ function inViewDirective ($parse) {
       var viewportEventSignal = signalSingle({ type: 'initial' })
 
       // Merged with the window events
-      .merge(signalFromEvent(window, 'checkInView click ready wheel mousewheel DomMouseScroll MozMousePixelScroll resize scroll touchmove mouseup keydown'))
+      .merge(signalFromEvent(window, viewportEvents.join(' ')))
 
       // Merge with container's events signal
       if (container) {
@@ -99,7 +115,8 @@ function inViewDirective ($parse) {
           event: event,
           element: element,
           elementRect: elementRect,
-          viewportRect: viewportRect
+          viewportRect: viewportRect,
+          forceChanged: (event.type === 'checkInViewUpdateAll')
         };
         // Add inview parts
         if (options.generateParts && info.inView) {
@@ -123,6 +140,7 @@ function inViewDirective ($parse) {
         }
         // Calculate changed flag
         newInfo.changed =
+          newInfo.forceChanged ||
           newInfo.inView !== lastInfo.inView ||
           !angular.equals(newInfo.parts, lastInfo.parts) ||
           !angular.equals(newInfo.direction, lastInfo.direction);
