@@ -2,7 +2,7 @@
 // - Author: [Nicola Peduzzi](https://github.com/thenikso)
 // - Repository: https://github.com/thenikso/angular-inview
 // - Install with: `npm install angular-inview`
-// - Version: **2.2.0**
+// - Version: **3.0.0**
 (function() {
 'use strict';
 
@@ -11,7 +11,8 @@
 // Use it in your AngularJS app by including the javascript and requireing it:
 //
 // `angular.module('myApp', ['angular-inview'])`
-var angularInviewModule = angular.module('angular-inview', [])
+var moduleName = 'angular-inview';
+angular.module(moduleName, [])
 
 // ## in-view directive
 //
@@ -27,7 +28,7 @@ var angularInviewModule = angular.module('angular-inview', [])
 // ## Implementation
 function inViewDirective ($parse) {
   return {
-    // Evaluate the expression passet to the attribute `in-view` when the DOM
+    // Evaluate the expression passed to the attribute `in-view` when the DOM
     // element is visible in the viewport.
     restrict: 'A',
     require: '?^^inViewContainer',
@@ -240,10 +241,10 @@ function offsetRect (rect, offset) {
     return rect;
   }
   var offsetObject = {
-    top: isPercent(offset[0]) ? (parseFloat(offset[0]) * rect.height) : offset[0],
-    right: isPercent(offset[1]) ? (parseFloat(offset[1]) * rect.width) : offset[1],
-    bottom: isPercent(offset[2]) ? (parseFloat(offset[2]) * rect.height) : offset[2],
-    left: isPercent(offset[3]) ? (parseFloat(offset[3]) * rect.width) : offset[3]
+    top: isPercent(offset[0]) ? (parseFloat(offset[0]) * rect.height / 100) : offset[0],
+    right: isPercent(offset[1]) ? (parseFloat(offset[1]) * rect.width / 100) : offset[1],
+    bottom: isPercent(offset[2]) ? (parseFloat(offset[2]) * rect.height / 100) : offset[2],
+    left: isPercent(offset[3]) ? (parseFloat(offset[3]) * rect.width / 100) : offset[3]
   };
   // Note: ClientRect object does not allow its properties to be written to therefore a new object has to be created.
   return {
@@ -377,9 +378,13 @@ function signalFromEvent (target, event) {
       subscriber(e);
     };
     var el = angular.element(target);
-    el.on(event, handler);
+    event.split(' ').map(function (e) {
+      el[0].addEventListener(e, handler, true);
+    });
     subscriber.$dispose = function () {
-      el.off(event, handler);
+      event.split(' ').map(function (e) {
+        el[0].removeEventListener(e, handler, true);
+      });
     };
   });
 }
@@ -392,9 +397,9 @@ function signalSingle (value) {
 
 // Module loaders exports
 if (typeof define === 'function' && define.amd) {
-  define(['angular'], angularInviewModule);
+  define(['angular'], moduleName);
 } else if (typeof module !== 'undefined' && module && module.exports) {
-  module.exports = angularInviewModule;
+  module.exports = moduleName;
 }
 
 })();
